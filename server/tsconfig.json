@@ -1,11 +1,12 @@
 {
-  "extends": "@tsconfig/node16/tsconfig.json",
+  "extends": "./node_modules/@tsconfig/node16/tsconfig.json",
   "compilerOptions": {
     "target": "es6",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "esModuleInterop": true,
     "outDir": "dist",
-    "rootDir": "src"
-  }
+    "rootDir": "src",
+    "types": ["jest"]
+  },
 }

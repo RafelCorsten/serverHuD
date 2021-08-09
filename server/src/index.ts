@@ -1,19 +1,30 @@
 require('dotenv').config();
 import Koa from 'koa';
-import {sequelize} from './Models/index';
+import http from 'http';
+import { sequelize } from './Models/index';
 import router from './Router/routes';
 import koaBody from 'koa-body';
 import logger from 'koa-logger';
 import cors from '@koa/cors';
 
-const app = new Koa();
-app.use(logger());
 
-app.use(cors());
-app.use(koaBody());
-app.use(router.routes());
+const bootServer = (port: string): http.Server => {
+  const app = new Koa();
+  //app.use(logger());
 
-(async () => {
-  await sequelize.sync({force: true});
-  app.listen(process.env.PORT || 3001, () => console.log(`Server running on port: ${process.env.PORT}`));
-})();
+  app.use(cors());
+  app.use(koaBody());
+  app.use(router.routes());
+
+  (async () => {
+    await sequelize.sync();
+  })();
+
+  const server = app.listen(port, () => {
+    console.log(`Server is running on port:${port}`);
+  });
+
+  return server;
+}
+
+module.exports = bootServer;

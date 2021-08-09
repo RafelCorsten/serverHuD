@@ -13,14 +13,10 @@ const userSchema = Joi.object({
 
 export const registerUser = async (ctx: any) => {
   try {
-    const value = await userSchema.validateAsync({
-      email: ctx.request.body.email,
-      password: ctx.request.body.password,
-    });
-    const user = await User.findOne({
+    const user = await User.findAndCountAll({
       where: { email: ctx.request.body.email },
     });
-    if (user !== null) {
+    if (user.count > 0) {
       ctx.body = "User already exists!";
       return (ctx.status = 409);
     }
@@ -140,10 +136,13 @@ const SplitTime = (numberOfHours: number) => {
 }
 
 export const addServer = async (ctx: any) => {
+  let hudData;
   let serverId = shortHash(ctx.request.body.url);
   let sslInfo = await getSslDetails(ctx.request.body.url);
   if (sslInfo.errno) sslInfo.valid = false;
-  const hudData = await hudServerData(ctx.request.body.optionalUrl);
+  if (ctx.request.body.optionalUrl) {
+    hudData = await hudServerData(ctx.request.body.optionalUrl);
+  }
   const user = await User.findByPk(ctx.state.user._id);
   const status = await isUp(ctx.request.body.url);
   const value = await serverSchema.validateAsync({

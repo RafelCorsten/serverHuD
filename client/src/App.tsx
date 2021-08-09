@@ -44,9 +44,12 @@ function App() {
           <Route path="/login">
             <Login setAuth={setAuth} />
           </Route>
-          <PrivateRoute isAuthed={isAuthed} path="/dashboard">
+          {/* <PrivateRoute isAuthed={isAuthed} path="/dashboard">
             <Dashboard />
-          </PrivateRoute>
+          </PrivateRoute> */}
+          <Route path="/dashboard">
+            <Dashboard />
+          </Route>
           <PrivateRoute isAuthed={isAuthed} path="/server/:id/upgrades">
             <Upgrades />
           </PrivateRoute>

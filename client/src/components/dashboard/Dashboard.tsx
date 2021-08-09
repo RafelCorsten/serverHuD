@@ -6,6 +6,8 @@ import { Main, Box } from "grommet";
 import useInterval from "../../services/useInterval";
 
 const Dashboard = (props: any) => {
+
+  //interface in other file
   interface IServer {
     serverList: string[];
   }
