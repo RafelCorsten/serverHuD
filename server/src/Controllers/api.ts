@@ -13,6 +13,10 @@ const userSchema = Joi.object({
 
 export const registerUser = async (ctx: any) => {
   try {
+    const value = await userSchema.validateAsync({
+      email: ctx.request.body.email,
+      password: ctx.request.body.password,
+    });
     const user = await User.findAndCountAll({
       where: { email: ctx.request.body.email },
     });
