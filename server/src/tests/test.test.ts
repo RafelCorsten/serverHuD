@@ -88,25 +88,38 @@ describe('Servers', () => {
       process.env.SECRET_KEY || "insecureuY47Qf2xo3M9kKjF67hq",
       { expiresIn: "7d" }
     );
-
   });
 
 
   describe('POST', () => {
-    test('Post should return 201', async () => {
-
+    test('Post should return 201, adding a server to a user', async () => {
       await api
         .post('/servers')
         .set('Accept', 'application/json')
         .set('Authorization', `Bearer ${accessToken}`)
         .send({
           "url": "http://neverssl.com",
-          "optionalUrl": "",
+          "optionalUrl": "localhost:8080",
           "name": "never"
         })
         .expect(201);
+
+        const user = await User.findOne({ where: { email: initialUser.email } });
+        expect(Array(user?.servers).length).toBe(1);
     });
 
+    test('Post should return 401, adding a server with no authorization token', async () => {
+      await api
+        .post('/servers')
+        .set('Accept', 'application/json')
+        .set('Authorization', `Bearer xd`)
+        .send({
+          "url": "http://neverssl.com",
+          "optionalUrl": "localhost:8080",
+          "name": "never"
+        })
+        .expect(401);
+    });
   });
 
 
