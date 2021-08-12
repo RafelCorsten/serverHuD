@@ -22,7 +22,7 @@ describe('Users', () => {
   });
 
 
-  describe('REGISTER', () => {
+  describe('/register', () => {
 
     test('Post should return 409, when creating a repeated user', async () => {
 
@@ -75,6 +75,57 @@ describe('Users', () => {
       server.close();
     });
   });
+
+  describe('/login', () => {
+
+    test('Post should return 403, when loging in with unexisting email', async () => {
+
+      await api
+        .post('/login')
+        .send({
+          "email": "tes@gmail.com",
+          "password": "password243"
+        })
+        .expect(403);
+    });
+
+    test('Post should return 401, when loging in with wrong email', async () => {
+
+      await api
+        .post('/login')
+        .send({
+          "email": "",
+          "password": "password243"
+        })
+        .expect(401);
+    });
+
+    test('Post should return 401, when loging in with wrong password', async () => {
+
+      await api
+        .post('/login')
+        .send({
+          "email": "test@gmail.com",
+          "password": ""
+        })
+        .expect(401);
+    });
+
+    test('Post should return 200, when loging in correctly', async () => {
+
+      await api
+        .post('/login')
+        .send({
+          "email": "test@gmail.com",
+          "password": "password"
+        })
+        .expect(200);
+    });
+
+    afterAll(() => {
+      server.close();
+    });
+  });
 });
 
 
@@ -90,40 +141,198 @@ describe('Servers', () => {
     );
   });
 
+  describe('/servers', () => {
 
-  describe('POST', () => {
-    test('Post should return 201, adding a server to a user', async () => {
-      await api
-        .post('/servers')
-        .set('Accept', 'application/json')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send({
-          "url": "http://neverssl.com",
-          "optionalUrl": "localhost:8080",
-          "name": "never"
-        })
-        .expect(201);
+    describe('GET', () => {
 
-        const user = await User.findOne({ where: { email: initialUser.email } });
-        expect(Array(user?.servers).length).toBe(1);
+      test('Get should return 404, when there are no servers on the user', async () => {
+        await api
+          .get('/servers')
+          .set('Authorization', `Bearer ${accessToken}`)
+          .expect(404);
+      });
+
+      test('Get should return 401, when there is a wrong no token', async () => {
+        await api
+          .get('/servers')
+          .set('Authorization', `Bearer justatoken`)
+          .expect(401);
+      });
+
+      test('Get should return 200, when adding a server to a user and then retrieving the same server', async () => {
+
+        await api
+          .post('/servers')
+          .set('Accept', 'application/json')
+          .set('Authorization', `Bearer ${accessToken}`)
+          .send({
+            "url": "http://neverssl.com",
+            "optionalUrl": "localhost:8080",
+            "name": "never"
+          })
+          .expect(201);
+
+        let user : any = await User.findOne({ where: { email: initialUser.email } });
+        expect(user.servers.length).toBe(1);
+
+        await api
+          .get('/servers')
+          .set('Authorization', `Bearer ${accessToken}`)
+          .expect(200);
+      });
     });
 
-    test('Post should return 401, adding a server with no authorization token', async () => {
-      await api
-        .post('/servers')
-        .set('Accept', 'application/json')
-        .set('Authorization', `Bearer xd`)
-        .send({
-          "url": "http://neverssl.com",
-          "optionalUrl": "localhost:8080",
-          "name": "never"
-        })
-        .expect(401);
+    describe('POST', () => {
+      test('Post should return 201, adding a server to a user', async () => {
+
+        let postUser: any = await User.findOne({ where: { email: initialUser.email } });
+        expect(postUser.servers.length).toBe(1);
+
+        await api
+          .post('/servers')
+          .set('Accept', 'application/json')
+          .set('Authorization', `Bearer ${accessToken}`)
+          .send({
+            "url": "http://neverssl.com",
+            "optionalUrl": "localhost:8080",
+            "name": "never"
+          })
+          .expect(201);
+
+        postUser = await User.findOne({ where: { email: initialUser.email } });
+        expect(postUser.servers.length).toBe(2);
+      });
+
+      test('Post should return 401, adding a server with no authorization token', async () => {
+        await api
+          .post('/servers')
+          .set('Accept', 'application/json')
+          .set('Authorization', `Bearer xd`)
+          .send({
+            "url": "http://neverssl.com",
+            "optionalUrl": "localhost:8080",
+            "name": "never"
+          })
+          .expect(401);
+      });
+    });
+
+
+    afterAll(() => {
+      server.close();
     });
   });
 
+  describe('/servers/:id', () => {
 
-  afterAll(() => {
-    server.close();
+    describe('GET', () => {
+
+      test('Get should return 404, when there are no servers on the user', async () => {
+        await api
+          .get('/servers/2csKa')
+          .set('Authorization', `Bearer ${accessToken}`)
+          .expect(404);
+      });
+
+      test('Get should return 401, when there is a wrong no token', async () => {
+        await api
+          .get('/servers/2csKaP')
+          .set('Authorization', `Bearer justatoken`)
+          .expect(401);
+      });
+
+      test('Get should return 200, when adding a server to a user and then retrieving the same server by id', async () => {
+
+        let getUser: any = await User.findOne({ where: { email: initialUser.email } });
+        expect(getUser.servers.length).toBe(2);
+
+        await api
+          .post('/servers')
+          .set('Accept', 'application/json')
+          .set('Authorization', `Bearer ${accessToken}`)
+          .send({
+            "url": "http://neverssl.com",
+            "optionalUrl": "localhost:8080",
+            "name": "never"
+          })
+          .expect(201);
+
+        getUser = await User.findOne({ where: { email: initialUser.email } });
+        expect(getUser.servers.length).toBe(3);
+
+        await api
+          .get('/servers/2csKaP')
+          .set('Authorization', `Bearer ${accessToken}`)
+          .expect(200);
+      });
+
+    });
+
+
+    afterAll(() => {
+      server.close();
+    });
+  });
+
+  describe('/servers/delete/:id', () => {
+
+    describe('PUT', () => {
+
+      test('Put should return 204, when there are no servers on the user', async () => {
+        await api
+          .put('/servers/delete/2csKa')
+          .set('Authorization', `Bearer ${accessToken}`)
+          .expect(204);
+      });
+
+      test('Put should return 204, when put a server that doesnt exist', async () => {
+        await api
+          .put('/servers/delete/2csK')
+          .set('Authorization', `Bearer ${accessToken}`)
+          .expect(204);
+      });
+
+      test('Get should return 401, when there is a wrong no token', async () => {
+        await api
+          .put('/servers/delete/2csKaP')
+          .set('Authorization', `Bearer justatoken`)
+          .expect(401);
+      });
+
+      test('Put should return 204, when deleting a server', async () => {
+
+        let user: any = await User.findOne({ where: { email: initialUser.email } });
+        expect(user.servers.length).toBe(3);
+
+        await api
+          .post('/servers')
+          .set('Accept', 'application/json')
+          .set('Authorization', `Bearer ${accessToken}`)
+          .send({
+            "url": "http://neverssl.com",
+            "optionalUrl": "localhost:8080",
+            "name": "never"
+          })
+          .expect(201);
+
+
+        user = await User.findOne({ where: { email: initialUser.email } });
+        expect(user.servers.length).toBe(4);
+
+        await api
+          .put('/servers/delete/2csKaP')
+          .set('Authorization', `Bearer ${accessToken}`)
+          .expect(204);
+
+        user = await User.findOne({ where: { email: initialUser.email } });
+        expect(user.servers.length).toBe(0);
+      });
+
+    });
+
+
+    afterAll(() => {
+      server.close();
+    });
   });
 });

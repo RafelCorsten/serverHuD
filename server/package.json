@@ -4,7 +4,7 @@
   "description": "Web based heads up display for servers",
   "main": "index.js",
   "scripts": {
-    "test": "NODE_ENV=test jest --verbose --silent --detectOpenHandles",
+    "test": "NODE_ENV=test jest --verbose --silent --detectOpenHandles --coverage",
     "test:watch": "npm run test -- --watch",
     "start": "NODE_ENV=production tsc-watch -p ./ --onSuccess \"nodemon ./dist/index.js\"",
     "dev": "NODE_ENV=development tsc-watch -p ./ --onSuccess \"nodemon ./dist/\""
